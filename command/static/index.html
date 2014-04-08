@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>SpinMedia AdTech &mdash; Ad Data Exporter</title>
+
+	<link rel="stylesheet" media="all" href="http://lib.spinmedia.com/bootstrap.min.css"/>
+
+	<script>
+		(function(w, d, c, t){
+			w[c] = w[c] || [];
+			var n = d.createElement(t), s = d.getElementsByTagName(t)[0];
+			n.async = true; n.src = '//kc.localphp.com/library/tests/clarity.js';
+			s.parentNode.insertBefore(n, s);
+		})(window, document, 'CLARITY', 'script');
+	</script>
+
+	<style type="text/css">
+		#master { margin: 20px 20% 0 20%; }
+
+		#searchbox { box-sizing: border-box; width: 100%; height: 45px; }
+
+		#top { padding: 25px 0 0 0; }
+
+		#display .panel { display: none; }
+
+		#display.success .panel.success,
+		#display.empty .panel.empty,
+		#display.failure .panel.failure { display: block; }
+
+		.button_download { white-space: nowrap; }
+	</style>
+</head>
+
+<body>
+	<div id="master">
+		<h3 class="text-center">SpinMedia AdTech &mdash; Ad Data Exporter</h3>
+		<section id="top">
+			<form>
+				<input type="search" class="input-medium search-query" id="searchbox" placeholder="Search for Campaign Table"/>
+			</form>
+		</section>
+
+		<section id="display">
+			<div class="empty panel">
+				<div class="alert alert-important">No tables found.</div>	
+			</div><!-- /.empty -->
+
+			<div class="failure panel">
+				<div class="alert alert-error"><em>Oops!</em> We have encountered an error!<br/><strong id="error_text"></strong></div>
+			</div><!-- /.failure -->
+
+			<div class="success panel">
+				<table class="table table-bordered" id="results">
+					<colgroup>
+						<col width="100%"/>
+						<col width="0"/>
+					</colgroup>
+
+					<tbody></tbody>	
+				</table>
+			</div><!-- /.success -->
+		</section><!-- /#display -->
+	</div><!-- /#master -->
+
+	<script type="text/html" id="item_template">
+		<tr>
+			<td>[!= dt.name !]</td>
+			<td><a class="btn btn-primary button_download" href="/table/[!= dt.name !]">Download CSV</a></td>
+		</tr>
+	</script>
+
+	<script>
+		CLARITY.push({
+			use: ['jquery', 'underscore', 'doubleunderscore', 'util'],
+			run: function($, _, __, util){
+				var $searchbox = $('#searchbox');
+				var $display = $('#display');
+				var $results_target = $('#results tbody');
+				var $error_text = $('#error_text');
+				var item_template = __.template(document.getElementById('item_template').innerHTML);
+
+				var current_mode = null;
+
+				function setDisplay (mode) {
+					if (current_mode === mode) {
+						return;
+					};
+					
+					current_mode = mode;
+					$display.removeClass('success failure empty').addClass(mode);
+				};
+
+				$searchbox.on('input', function(){
+					var value = $searchbox.val();
+
+					if (!value.length) {
+						setDisplay(null);
+						return;
+					};
+
+					util.hitAPI({
+						url: 'search',
+						verb: 'GET',
+						data: { q: value },
+						success: function(items){
+							if (!items.length) {
+								setDisplay('empty');
+								return;
+							};
+
+							var blob = [], counter = 0, limit = items.length;
+							while (counter < limit) {
+								blob.push(item_template({ name: items[counter] }));
+								counter++;
+							};
+
+							$results_target.html(blob.join(''));
+							setDisplay('success');
+						},
+
+						error: function(message, jqXHR, data, empty_data) {
+							var display_message = message;
+
+							if (!empty_data) {
+								display_message = data;
+							};
+
+							$error_text.html(display_data);
+							setDisplay('failure');
+						}
+					});
+				});
+			}
+		});
+	</script>
+</body>
+</html>
