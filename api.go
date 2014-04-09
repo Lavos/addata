@@ -11,10 +11,12 @@ import (
 	"github.com/hoisie/web"
 )
 
+// Queries submitted to the API must match the table name schema.
 var (
 	validQuery = regexp.MustCompile(`[a-zA-Z0-9-_]+`)
 )
 
+// API creates and managers a pointer to a web.Server, and has methods for the HTTP API so we can easily expose the other required types.
 type API struct {
 	Port   uint
 	Server *web.Server
@@ -22,6 +24,7 @@ type API struct {
 	Index  *Index
 }
 
+// NewAPI returns a pointer to a new API instance, creating all the required types for the API to function.
 func NewAPI(port uint, i *Index, s *Store) *API {
 	w := web.NewServer()
 
@@ -40,11 +43,13 @@ func NewAPI(port uint, i *Index, s *Store) *API {
 	return a
 }
 
+// Run starts the API instance, which in turn starts the web.Server.
 func (a *API) Run() {
 	log.Print("Starting API...")
 	go a.Server.Run(fmt.Sprintf(":%v", a.Port))
 }
 
+// Search searches for a given table name against the Index, and returns a list of string tablenames.
 func (a *API) Search(ctx *web.Context) []byte {
 	term := ctx.Params["q"]
 
@@ -71,6 +76,7 @@ func (a *API) Search(ctx *web.Context) []byte {
 	return b
 }
 
+// ReturnTable returns a CSV-encoded download of a table's contents.
 func (a *API) ReturnTable(ctx *web.Context, tablename string) {
 	results, err := a.Store.ReturnTable(tablename)
 
