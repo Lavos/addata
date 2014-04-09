@@ -1,25 +1,21 @@
 package addata
 
 import (
-	"log"
-	"fmt"
-	"errors"
 	"database/sql"
+	"errors"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"log"
 )
 
-var (
-	// dsn := "username:password@protocol(address)/dbname?param=value"
-	dsn = "addata:faa1bcbea6a2e4d6@tcp(adbytes-db1.shared-prod.west1:3306)/addata"
-)
-
+// Type Store stores the DSN for the Database access, derived from the Application Configuration.
 type Store struct {
-	dsn string
-	db *sql.DB
+	DSN string
+	DB  *sql.DB
 }
 
-
-func newStore(dsn string) *Store {
+// NewStore returns a pointer to a new Store
+func NewStore(dsn string) *Store {
 	db, err := sql.Open("mysql", dsn)
 	log.Printf("%#v - %#v", db, err)
 
@@ -29,16 +25,17 @@ func newStore(dsn string) *Store {
 	}
 
 	return &Store{
-		dsn: dsn,
-		db: db,
+		DSN: dsn,
+		DB:  db,
 	}
 }
 
-func (s *Store) getTableNames() []string {
+// GetTableNames returns a list of the string table names, gathered from the database.
+func (s *Store) GetTableNames() []string {
 	results := make([]string, 0)
 	var name string
 
-	rows, err := s.db.Query("SHOW TABLES")
+	rows, err := s.DB.Query("SHOW TABLES")
 
 	if err != nil {
 		return nil
@@ -55,8 +52,9 @@ func (s *Store) getTableNames() []string {
 	return results
 }
 
-func (s *Store) returnTable(tablename string) ([][]string, error) {
-	rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM `%s`", tablename))
+// ReturnTable returns the rows of a table in a format that's applicable for CSV encoding in the API.
+func (s *Store) ReturnTable(tablename string) ([][]string, error) {
+	rows, err := s.DB.Query(fmt.Sprintf("SELECT * FROM `%s`", tablename))
 	defer rows.Close()
 
 	if err != nil {
@@ -67,9 +65,9 @@ func (s *Store) returnTable(tablename string) ([][]string, error) {
 	results := [][]string{columns}
 
 	var (
-		pointers []interface{}
+		pointers  []interface{}
 		container []sql.RawBytes
-		result []string
+		result    []string
 	)
 
 	length := len(columns)

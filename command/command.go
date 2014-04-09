@@ -1,12 +1,12 @@
 package main
 
 import (
-	"os"
-	"log"
 	"encoding/json"
 	"flag"
+	"log"
+	"os"
 
-	"github.com/Lavos/ad-data"
+	"github.com/Lavos/addata"
 )
 
 var (
@@ -23,7 +23,7 @@ func awaitQuitKey() {
 	}
 }
 
-func main () {
+func main() {
 	// configuration JSON
 	flag.Parse()
 	log.Printf("config filename: %#v", *config_filename)
